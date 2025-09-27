@@ -20,6 +20,118 @@ const contenders = document.getElementById("contenders");
 const p1_graphic = document.getElementById("player1");
 const p2_graphic = document.getElementById("player2");
 
+// 🔥 ENHANCED SOUND MANAGER SECTION 🔥
+const SOUNDS = {
+    // Game state sounds (loopable background music)
+    MENU_THEME: new Audio('sounds/before the game and after the game.mp3'),
+    GAME_THEME: new Audio('sounds/during the game.wav'),
+    
+    // Single-play sounds (will be cloned on play)
+    SHOT: new Audio('Sounds/Shots.wav'),
+    EXPLOSION: new Audio('Sounds/Explosion.wav'),
+    SHIELD: new Audio('Sounds/Shield.wav'),
+    INVISIBILITY: new Audio('Sounds/Invisibility.wav'),
+    OVERDRIVE: new Audio('Sounds/Overdrive-shot.wav'),
+};
+
+// Configure sounds
+SOUNDS.MENU_THEME.loop = true;
+SOUNDS.MENU_THEME.volume = 0.6;
+SOUNDS.GAME_THEME.loop = true;
+SOUNDS.GAME_THEME.volume = 0.5;
+
+// Sound state tracking
+let currentBackgroundMusic = null;
+let soundEnabled = true;
+
+/**
+ * Plays a sound. For effects, it clones the audio element to allow simultaneous playback.
+ * @param {HTMLAudioElement} audio - The base Audio object.
+ * @param {number} volume - Optional volume (0.0 to 1.0).
+ */
+function playSound(audio, volume = 1.0) {
+    if (!soundEnabled) return;
+    
+    if (audio === SOUNDS.MENU_THEME || audio === SOUNDS.GAME_THEME) {
+        // Background music handling
+        audio.volume = volume;
+        audio.play().catch(e => console.error("Background music playback failed:", e));
+    } else {
+        // Sound effects handling
+        const clone = audio.cloneNode();
+        clone.volume = volume;
+        clone.play().catch(e => console.error("Sound playback failed:", e));
+    }
+}
+
+/**
+ * Switches background music smoothly
+ * @param {HTMLAudioElement} newMusic - The new background music to play
+ * @param {number} fadeTime - Fade transition time in milliseconds
+ */
+function switchBackgroundMusic(newMusic, fadeTime = 1000) {
+    if (!soundEnabled) return;
+    
+    if (currentBackgroundMusic && currentBackgroundMusic !== newMusic) {
+        // Fade out current music
+        const fadeOut = setInterval(() => {
+            if (currentBackgroundMusic.volume > 0.1) {
+                currentBackgroundMusic.volume = Math.max(0, currentBackgroundMusic.volume - 0.1);
+            } else {
+                currentBackgroundMusic.pause();
+                currentBackgroundMusic.currentTime = 0;
+                currentBackgroundMusic.volume = currentBackgroundMusic === SOUNDS.MENU_THEME ? 0.6 : 0.5;
+                clearInterval(fadeOut);
+            }
+        }, fadeTime / 10);
+    }
+    
+    // Start new music ONLY if it's different from current
+    if (newMusic && newMusic !== currentBackgroundMusic) {
+        currentBackgroundMusic = newMusic;
+        newMusic.currentTime = 0;
+        newMusic.volume = 0;
+        newMusic.play().then(() => {
+            // Fade in new music
+            const fadeIn = setInterval(() => {
+                const targetVolume = newMusic === SOUNDS.MENU_THEME ? 0.6 : 0.5;
+                if (newMusic.volume < targetVolume - 0.1) {
+                    newMusic.volume = Math.min(targetVolume, newMusic.volume + 0.1);
+                } else {
+                    newMusic.volume = targetVolume;
+                    clearInterval(fadeIn);
+                }
+            }, fadeTime / 10);
+        }).catch(e => console.error("Background music switch failed:", e));
+    }
+}
+
+function stopAllBackgroundMusic() {
+    [SOUNDS.MENU_THEME, SOUNDS.GAME_THEME].forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = audio === SOUNDS.MENU_THEME ? 0.6 : 0.5; // Reset volumes
+    });
+    currentBackgroundMusic = null;
+}
+
+// Sound toggle function for user control
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    if (!soundEnabled) {
+        stopAllBackgroundMusic();
+    } else {
+        // Only play appropriate music based on current game state
+        if (playing) {
+            switchBackgroundMusic(SOUNDS.GAME_THEME);
+        } else {
+            switchBackgroundMusic(SOUNDS.MENU_THEME);
+        }
+    }
+}
+
+// 🔥 END ENHANCED SOUND MANAGER SECTION 🔥
+
 // SVG Images (preloaded via base64)
 let player1_svg, player2_svg, flicker_svg;
 
@@ -44,7 +156,6 @@ const turnRate = 5;
 // Shooting parameters
 const shootingRate = 10;
 const shootingSpeed = 12;
-const maxAmmo = 25;
 
 // Import SVGs as Images (with Promise for loading)
 function importSVG(name) {
@@ -69,6 +180,9 @@ const explosionSize = {
 
 // Popup UI
 function openStartPopup() {
+  // 🔥 SOUND: Play Menu Theme
+  switchBackgroundMusic(SOUNDS.MENU_THEME);
+
   const startBtn = startPopup.querySelector("#start");
   startBtn.addEventListener("click", startGame, { once: true });
   contenders.style.display = "block";
@@ -91,6 +205,11 @@ function closeStartPopup() {
 }
 
 function showResultsPopup() {
+  // 🔥 SOUND: Switch back to Menu Theme after game ends
+  setTimeout(() => {
+    switchBackgroundMusic(SOUNDS.MENU_THEME);
+  }, 1000); // Delay to let explosion sound play
+
   resultsPopup.style.display = "block";
   resultsPopup.style.opacity = "1";
   overlay.style.display = "block";
@@ -98,8 +217,8 @@ function showResultsPopup() {
 }
 
 function hideResultsPopup() {
-  resultsPopup.style.opacity = "0";
   overlay.style.opacity = "0";
+  resultsPopup.style.opacity = "0";
   setTimeout(() => {
     resultsPopup.style.display = "none";
     overlay.style.display = "none";
@@ -123,7 +242,7 @@ function checkBoundary(dot1, dot2) {
 
 function rad(angle) { return angle * Math.PI / 180; }
 
-// 🔥 NEW: Show sacrifice message
+// 🔥 NEW: Show sacrifice message (No sound added here as effect sounds are added in trySacrifice)
 function showSacrificeMessage(rocket, cost, ability) {
   const messages = {
     shield: `Sacrificed ${cost}% of your life for protection!`,
@@ -208,7 +327,7 @@ function Rocket(token, role) {
   this.health = 100;
   this.direction = token == "one" ? 270 : 90;
   this.shots = [];
-  this.ammo = maxAmmo;
+  this.ammo = Infinity;  // Unlimited bullets
   this.hasShield = false;
   this.invisible = false;
   this.sacrificeCooldown = 0;
@@ -223,7 +342,7 @@ Rocket.prototype.update = updateRocket;
 Rocket.prototype.move = tesseractMove;
 Rocket.prototype.render = renderRocket;
 Rocket.prototype.updateAmmoUI = function() {
-  this.ammoUI.textContent = `Bullets: ${this.ammo}`;
+  this.ammoUI.textContent = `Bullets: Unlimited`;
 };
 Rocket.prototype.trySacrifice = function(type) {
   if (this.health <= 0 || this.sacrificeCooldown > 0) return;
@@ -232,6 +351,8 @@ Rocket.prototype.trySacrifice = function(type) {
     cost = 20;
     effect = () => {
       this.hasShield = true;
+      // 🔥 SOUND: Play Shield sound
+      playSound(SOUNDS.SHIELD);
       // Flash on activation
       const flash = document.createElement('div');
       flash.style.cssText = `
@@ -252,6 +373,8 @@ Rocket.prototype.trySacrifice = function(type) {
     cost = 30;
     effect = () => {
       this.invisible = true;
+      // 🔥 SOUND: Play Invisibility sound
+      playSound(SOUNDS.INVISIBILITY);
       setTimeout(() => this.invisible = false, 2500);
     };
   } else if (type === 'overdrive' && this.health >= 40) {
@@ -270,6 +393,8 @@ Rocket.prototype.trySacrifice = function(type) {
 Rocket.prototype.chargeOverdriveShot = function() {
   if (this.overdriveCharging) return;
   this.overdriveCharging = true;
+  // 🔥 SOUND: Play Overdrive sound
+  playSound(SOUNDS.OVERDRIVE);
   const warning = document.createElement('div');
   warning.style.cssText = `
     position: absolute; top:0; left:0; width:100%; height:100%;
@@ -456,12 +581,12 @@ function updateRocket() {
   }
   if (this.rotateLeft) this.direction += turnRate;
   if (this.rotateRight) this.direction -= turnRate;
-  if (this.fire && this.ammo > 0) {
+  if (this.fire) {  // Unlimited: no ammo check
     if (this.shotTimeout >= shootingRate) {
       let position = this.getPoints();
       this.shots.push(new Shot(position[0][0], position[0][1], this.direction, this.id));
-      this.ammo--;
-      this.updateAmmoUI();
+      // 🔥 SOUND: Play Shots sound
+      playSound(SOUNDS.SHOT, 0.4); // Lower volume slightly
       this.shotTimeout = 0;
     } else this.shotTimeout++;
   } else this.shotTimeout = shootingRate;
@@ -484,6 +609,7 @@ function collisionPrevention() {
     let repelY = dist_y / repel;
     player1.vx += repelX * 5; player1.vy += repelY * 5;
     player2.vx -= repelX * 5; player2.vy -= repelY * 5;
+    // Removed sound here to avoid spamming a collision sound on contact
     if (!player1.hasShield) player1.health -= 5;
     if (!player2.hasShield) player2.health -= 5;
   }
@@ -553,6 +679,9 @@ function updateAsteroid(num) {
           target.health -= (asteroids[num].radius / 4).toFixed();
         }
         asteroids[num].explode();
+        // 🔥 SOUND: Play Asteroid Collision sound
+        // We'll use the explosion sound for the asteroid breaking
+        playSound(SOUNDS.EXPLOSION, 0.3); 
         asteroids.splice(num, 1);
         return;
       }
@@ -573,7 +702,7 @@ function renderAsteroid() {
   ctx.fill();
 }
 
-// Shot
+// Shot (No sound for shot *impact* added, as it could be too noisy with many shots)
 function Shot(x, y, direction, owner) {
   this.x = x;
   this.y = y;
@@ -618,6 +747,9 @@ function updateShot() {
       if (proximityToAsteroid <= asteroids[i].radius) {
         asteroids[i].explode();
         asteroids.splice(i, 1);
+        // 🔥 SOUND: Play Asteroid Collision sound
+        // We'll use the explosion sound for the asteroid breaking
+        playSound(SOUNDS.EXPLOSION, 0.3); 
         this.hit = true;
         break;
       }
@@ -656,6 +788,10 @@ function checkGameStatus() {
 }
 
 function gameOver(target) {
+  // 🔥 SOUND: Stop Game Theme and Play Explosion sound
+  stopAllBackgroundMusic();
+  playSound(SOUNDS.EXPLOSION, 1.0); // Full volume for game over
+
   p1_graphic.style.opacity = 0;
   p2_graphic.style.opacity = 0;
   playing = false;
@@ -721,6 +857,12 @@ async function preloadSVGs() {
 }
 
 function startGame() {
+  // 🔥 SOUND: Stop Menu Theme and Switch to Game Theme music ONLY
+  stopAllBackgroundMusic();
+  setTimeout(() => {
+    switchBackgroundMusic(SOUNDS.GAME_THEME);
+  }, 100);
+
   placeElements();
   asteroids = [];
   player1 = setPlayer(playerOne, "one");
@@ -729,8 +871,8 @@ function startGame() {
   if (playerTwo) player2.swornEnemy = player1;
   shield_p1.innerHTML = "100";
   shield_p2.innerHTML = "100";
-  document.querySelector('.ammo-counter.p1').textContent = "Bullets: 25";
-  document.querySelector('.ammo-counter.p2').textContent = "Bullets: 25";
+  document.querySelector('.ammo-counter.p1').textContent = "Bullets: Unlimited";
+  document.querySelector('.ammo-counter.p2').textContent = "Bullets: Unlimited";
   scoreboard.style.opacity = 1;
   crash.style.opacity = 0;
   explosion.classList.remove("explode");
@@ -784,6 +926,29 @@ document.addEventListener("DOMContentLoaded", async function() {
   calculateSizes();
   placeElements();
   await preloadSVGs();  // Wait for SVGs before showing UI
+  
+  // 🔥 Add sound toggle button to the UI (optional)
+  const soundToggle = document.createElement('button');
+  soundToggle.innerHTML = '🔊';
+  soundToggle.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.7);
+    border: 2px solid #fff;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1000;
+  `;
+  soundToggle.addEventListener('click', () => {
+    toggleSound();
+    soundToggle.innerHTML = soundEnabled ? '🔊' : '🔇';
+  });
+  document.body.appendChild(soundToggle);
+  
   openStartPopup();
 
   document.getElementById("restart").addEventListener("click", function() {
