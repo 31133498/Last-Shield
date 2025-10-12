@@ -59,8 +59,42 @@
 
     <!-- SCORE & AMMO -->
     <div class="scoreboard">
-      <div><p class="counter p1"><span class="shield_p1">0</span>%</p><div class="ammo-counter p1">Bullets: 25</div></div>
-      <div><p class="counter p2"><span class="shield_p2">0</span>%</p><div class="ammo-counter p2">Bullets: 25</div></div>
+      <div class="hud-panel hud-left">
+        <div class="hud-corner tl"></div>
+        <div class="hud-corner tr"></div>
+        <div class="hud-corner bl"></div>
+        <div class="hud-corner br"></div>
+        <div class="hud-line h-top"></div>
+        <div class="hud-line h-bottom"></div>
+        <div class="hud-line v-left"></div>
+        <div class="hud-line v-right"></div>
+        <div class="player-label p1-label">PLAYER 1</div>
+        <p class="counter p1">SHIELD: <span class="shield_p1">0</span>%</p>
+        <div class="shield-bar-container">
+          <div class="shield-bar p1-bar" style="width: 0%"></div>
+        </div>
+        <div class="ammo-counter p1"><span class="ammo-icon">◆</span> AMMO: 25</div>
+      </div>
+      <div class="hud-panel hud-right">
+        <div class="hud-corner tl"></div>
+        <div class="hud-corner tr"></div>
+        <div class="hud-corner bl"></div>
+        <div class="hud-corner br"></div>
+        <div class="hud-line h-top"></div>
+        <div class="hud-line h-bottom"></div>
+        <div class="hud-line v-left"></div>
+        <div class="hud-line v-right"></div>
+        <div class="player-label p2-label">PLAYER 2</div>
+        <p class="counter p2">SHIELD: <span class="shield_p2">0</span>%</p>
+        <div class="shield-bar-container">
+          <div class="shield-bar p2-bar" style="width: 0%"></div>
+        </div>
+        <div class="ammo-counter p2"><span class="ammo-icon">◆</span> AMMO: 25</div>
+      </div>
+    </div>
+    <div class="center-hud">
+      <div class="hud-crosshair"></div>
+      <div class="hud-radar"></div>
     </div>
 
     <canvas class="gameboard"></canvas>
