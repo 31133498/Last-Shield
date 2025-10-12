@@ -43,8 +43,38 @@
           <button id="playerTwo" class="toggle button option-red">Human</button>
         </div>
         <div class="options-lower">
+          <button id="tutorial" class="tutorial-button">Tutorial</button>
           <button id="start" class="start-button">Start</button>
         </div>
+      </div>
+    </div>
+
+    <!-- TUTORIAL POPUP -->
+    <div id="tutorial-popup" class="tutorial-popup">
+      <div class="tutorial-content">
+        <button id="close-tutorial" class="close-tutorial">✕</button>
+        <h2 class="tutorial-title">⚔️ THE LAST STAND ⚔️</h2>
+        <p class="tutorial-story">In the dying embers of civilization, two warriors remain. The fate of humanity rests upon this final confrontation. Master the ancient arts of combat, or perish in the void...</p>
+        
+        <div class="controls-section">
+          <h3 class="controls-header">🔷 PLAYER 1 - THE BLUE SENTINEL</h3>
+          <div class="control-item"><span class="key">W</span> Ascend to the heavens</div>
+          <div class="control-item"><span class="key">S</span> Descend into darkness</div>
+          <div class="control-item"><span class="key">A</span> Drift left through the cosmos</div>
+          <div class="control-item"><span class="key">D</span> Surge right across the stars</div>
+          <div class="control-item"><span class="key">SPACE</span> Unleash your fury</div>
+        </div>
+        
+        <div class="controls-section">
+          <h3 class="controls-header">🔶 PLAYER 2 - THE RED DESTROYER</h3>
+          <div class="control-item"><span class="key">↑</span> Rise above your enemies</div>
+          <div class="control-item"><span class="key">↓</span> Plunge into battle</div>
+          <div class="control-item"><span class="key">←</span> Evade to the left</div>
+          <div class="control-item"><span class="key">→</span> Strike from the right</div>
+          <div class="control-item"><span class="key">ENTER</span> Rain destruction upon your foe</div>
+        </div>
+        
+        <p class="tutorial-warning">⚠️ Your shields are your lifeline. Your bullets are finite. Every shot counts. Every move matters. There is no retreat. Only victory or oblivion.</p>
       </div>
     </div>
 
@@ -141,6 +171,36 @@
     <div class="status-bar">
       <div class="status-item"><span class="status-dot"></span>SYSTEMS ONLINE</div>
       <div class="status-item"><span class="status-dot"></span>COMBAT READY</div>
+    </div>
+
+    <!-- ON-SCREEN CONTROLS TOGGLE -->
+    <div id="toggle-controls-wrapper" class="toggle-controls-wrapper">
+      <button id="toggle-controls" class="toggle-controls-btn">📱</button>
+      <span class="toggle-controls-label">On-Screen Controls</span>
+    </div>
+
+    <!-- ON-SCREEN CONTROLS -->
+    <div id="on-screen-controls" class="on-screen-controls" style="display: none;">
+      <div class="controls-notice">⚠️ Single Player Only</div>
+      
+      <!-- Left Joystick -->
+      <div class="joystick-container">
+        <div class="joystick-base">
+          <div id="joystick" class="joystick-stick"></div>
+        </div>
+      </div>
+      
+      <!-- Right Action Buttons -->
+      <div class="action-buttons">
+        <button id="fire-btn" class="action-btn fire-btn">🔥</button>
+      </div>
+      
+      <!-- Sacrifice Buttons -->
+      <div class="sacrifice-buttons">
+        <button id="shield-btn" class="sacrifice-btn shield-btn">🛡️<span class="cost">-20%</span></button>
+        <button id="invis-btn" class="sacrifice-btn invis-btn">👻<span class="cost">-30%</span></button>
+        <button id="overdrive-btn" class="sacrifice-btn overdrive-btn">⚡<span class="cost">-40%</span></button>
+      </div>
     </div>
 
     <canvas class="gameboard"></canvas>

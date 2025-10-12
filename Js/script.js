@@ -183,6 +183,9 @@ function openStartPopup() {
   // 🔥 SOUND: Play Menu Theme
   switchBackgroundMusic(SOUNDS.MENU_THEME);
 
+  const toggleLabel = document.querySelector(".toggle-controls-label");
+  if (toggleLabel) toggleLabel.style.display = "inline";
+
   const startBtn = startPopup.querySelector("#start");
   startBtn.addEventListener("click", startGame, { once: true });
   contenders.style.display = "block";
@@ -863,6 +866,9 @@ function startGame() {
     switchBackgroundMusic(SOUNDS.GAME_THEME);
   }, 100);
 
+  const toggleLabel = document.querySelector(".toggle-controls-label");
+  if (toggleLabel) toggleLabel.style.display = "none";
+
   placeElements();
   asteroids = [];
   player1 = setPlayer(playerOne, "one");
@@ -1049,3 +1055,190 @@ function calculateSizes() {
   centerPoint = { x: canvas.width / 2, y: canvas.height / 2 };
   scoreboard.style.opacity = 0;
 }
+
+
+// Tutorial popup handlers
+document.addEventListener("DOMContentLoaded", function() {
+  const tutorialBtn = document.getElementById("tutorial");
+  const tutorialPopup = document.getElementById("tutorial-popup");
+  const closeTutorialBtn = document.getElementById("close-tutorial");
+
+  if (tutorialBtn) {
+    tutorialBtn.addEventListener("click", function() {
+      tutorialPopup.style.display = "block";
+      setTimeout(() => tutorialPopup.style.opacity = "1", 10);
+    });
+  }
+
+  if (closeTutorialBtn) {
+    closeTutorialBtn.addEventListener("click", function() {
+      tutorialPopup.style.opacity = "0";
+      setTimeout(() => tutorialPopup.style.display = "none", 300);
+    });
+  }
+
+  // Close on background click
+  if (tutorialPopup) {
+    tutorialPopup.addEventListener("click", function(e) {
+      if (e.target === tutorialPopup) {
+        tutorialPopup.style.opacity = "0";
+        setTimeout(() => tutorialPopup.style.display = "none", 300);
+      }
+    });
+  }
+});
+
+
+// On-Screen Controls Handler
+let onScreenControlsActive = false;
+let joystickActive = false;
+let joystickCenter = { x: 0, y: 0 };
+let currentAngle = 0;
+
+document.addEventListener("DOMContentLoaded", function() {
+  const toggleBtn = document.getElementById("toggle-controls");
+  const controlsContainer = document.getElementById("on-screen-controls");
+  const joystick = document.getElementById("joystick");
+  const joystickBase = document.querySelector(".joystick-base");
+  const fireBtn = document.getElementById("fire-btn");
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function() {
+      onScreenControlsActive = !onScreenControlsActive;
+      controlsContainer.style.display = onScreenControlsActive ? "block" : "none";
+      toggleBtn.style.background = onScreenControlsActive 
+        ? "linear-gradient(135deg, rgba(0, 255, 0, 0.5), rgba(0, 255, 0, 0.2))"
+        : "linear-gradient(135deg, rgba(0, 255, 255, 0.3), rgba(0, 255, 255, 0.1))";
+    });
+  }
+
+  // Joystick controls
+  function handleJoystickStart(e) {
+    if (!playing || !onScreenControlsActive) return;
+    joystickActive = true;
+    const rect = joystickBase.getBoundingClientRect();
+    joystickCenter = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2
+    };
+  }
+
+  function handleJoystickMove(e) {
+    if (!joystickActive || !playing) return;
+    e.preventDefault();
+    
+    const touch = e.touches ? e.touches[0] : e;
+    const deltaX = touch.clientX - joystickCenter.x;
+    const deltaY = touch.clientY - joystickCenter.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const maxDistance = 45;
+    
+    const limitedDistance = Math.min(distance, maxDistance);
+    const angle = Math.atan2(deltaY, deltaX);
+    
+    const x = limitedDistance * Math.cos(angle);
+    const y = limitedDistance * Math.sin(angle);
+    
+    joystick.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+    
+    // Control the active player
+    const activePlayer = playerOne ? player2 : player1;
+    if (activePlayer && !activePlayer.swornEnemy) {
+      currentAngle = (angle * 180 / Math.PI + 90) % 360;
+      if (currentAngle < 0) currentAngle += 360;
+      
+      activePlayer.thruster = distance > 10;
+      
+      const targetAngle = (360 - currentAngle) % 360;
+      let angleDiff = targetAngle - activePlayer.direction;
+      if (angleDiff > 180) angleDiff -= 360;
+      if (angleDiff < -180) angleDiff += 360;
+      
+      activePlayer.rotateLeft = angleDiff > 5;
+      activePlayer.rotateRight = angleDiff < -5;
+    }
+  }
+
+  function handleJoystickEnd() {
+    joystickActive = false;
+    joystick.style.transform = "translate(-50%, -50%)";
+    
+    const activePlayer = playerOne ? player2 : player1;
+    if (activePlayer && !activePlayer.swornEnemy) {
+      activePlayer.thruster = false;
+      activePlayer.rotateLeft = false;
+      activePlayer.rotateRight = false;
+    }
+  }
+
+  if (joystick) {
+    joystick.addEventListener("mousedown", handleJoystickStart);
+    joystick.addEventListener("touchstart", handleJoystickStart);
+    document.addEventListener("mousemove", handleJoystickMove);
+    document.addEventListener("touchmove", handleJoystickMove, { passive: false });
+    document.addEventListener("mouseup", handleJoystickEnd);
+    document.addEventListener("touchend", handleJoystickEnd);
+  }
+
+  // Fire button
+  if (fireBtn) {
+    function handleFireStart() {
+      if (!playing || !onScreenControlsActive) return;
+      const activePlayer = playerOne ? player2 : player1;
+      if (activePlayer && !activePlayer.swornEnemy) {
+        activePlayer.fire = true;
+      }
+    }
+
+    function handleFireEnd() {
+      const activePlayer = playerOne ? player2 : player1;
+      if (activePlayer && !activePlayer.swornEnemy) {
+        activePlayer.fire = false;
+      }
+    }
+
+    fireBtn.addEventListener("mousedown", handleFireStart);
+    fireBtn.addEventListener("touchstart", handleFireStart);
+    fireBtn.addEventListener("mouseup", handleFireEnd);
+    fireBtn.addEventListener("touchend", handleFireEnd);
+  }
+});
+
+// Sacrifice buttons handlers
+document.addEventListener("DOMContentLoaded", function() {
+  const shieldBtn = document.getElementById("shield-btn");
+  const invisBtn = document.getElementById("invis-btn");
+  const overdriveBtn = document.getElementById("overdrive-btn");
+
+  function handleSacrifice(type) {
+    if (!playing || !onScreenControlsActive) return;
+    const activePlayer = playerOne ? player2 : player1;
+    if (activePlayer && !activePlayer.swornEnemy) {
+      activePlayer.trySacrifice(type);
+    }
+  }
+
+  if (shieldBtn) {
+    shieldBtn.addEventListener("click", () => handleSacrifice('shield'));
+    shieldBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      handleSacrifice('shield');
+    });
+  }
+
+  if (invisBtn) {
+    invisBtn.addEventListener("click", () => handleSacrifice('invisibility'));
+    invisBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      handleSacrifice('invisibility');
+    });
+  }
+
+  if (overdriveBtn) {
+    overdriveBtn.addEventListener("click", () => handleSacrifice('overdrive'));
+    overdriveBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      handleSacrifice('overdrive');
+    });
+  }
+});
