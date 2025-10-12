@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Last Shield</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./Css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
@@ -93,8 +93,54 @@
       </div>
     </div>
     <div class="center-hud">
-      <div class="hud-crosshair"></div>
-      <div class="hud-radar"></div>
+      <div class="hud-crosshair">
+        <div class="crosshair-dot"></div>
+        <div class="crosshair-ring"></div>
+      </div>
+      <div class="hud-radar">
+        <div class="radar-sweep"></div>
+        <div class="radar-ping"></div>
+      </div>
+    </div>
+    
+    <!-- CORNER HUD ELEMENTS -->
+    <div class="corner-hud tl-corner">
+      <svg viewBox="0 0 100 100" class="corner-bracket">
+        <polyline points="80,0 0,0 0,80" fill="none" stroke="currentColor" stroke-width="2"/>
+        <polyline points="70,0 0,0 0,70" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+      </svg>
+    </div>
+    <div class="corner-hud tr-corner">
+      <svg viewBox="0 0 100 100" class="corner-bracket">
+        <polyline points="20,0 100,0 100,80" fill="none" stroke="currentColor" stroke-width="2"/>
+        <polyline points="30,0 100,0 100,70" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+      </svg>
+    </div>
+    <div class="corner-hud bl-corner">
+      <svg viewBox="0 0 100 100" class="corner-bracket">
+        <polyline points="80,100 0,100 0,20" fill="none" stroke="currentColor" stroke-width="2"/>
+        <polyline points="70,100 0,100 0,30" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+      </svg>
+    </div>
+    <div class="corner-hud br-corner">
+      <svg viewBox="0 0 100 100" class="corner-bracket">
+        <polyline points="20,100 100,100 100,20" fill="none" stroke="currentColor" stroke-width="2"/>
+        <polyline points="30,100 100,100 100,30" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+      </svg>
+    </div>
+    
+    <!-- TACTICAL OVERLAY -->
+    <div class="tactical-overlay">
+      <div class="tac-line tac-h1"></div>
+      <div class="tac-line tac-h2"></div>
+      <div class="tac-line tac-v1"></div>
+      <div class="tac-line tac-v2"></div>
+    </div>
+    
+    <!-- STATUS INDICATORS -->
+    <div class="status-bar">
+      <div class="status-item"><span class="status-dot"></span>SYSTEMS ONLINE</div>
+      <div class="status-item"><span class="status-dot"></span>COMBAT READY</div>
     </div>
 
     <canvas class="gameboard"></canvas>
@@ -154,6 +200,6 @@
     </svg>
   </div>
 
-  <script src="script.js"></script>
+  <script src="./Js/script.js"></script>
 </body>
 </html>
